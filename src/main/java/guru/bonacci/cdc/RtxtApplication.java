@@ -32,15 +32,15 @@ public class RtxtApplication {
 	@Bean
 	CommandLineRunner demo(OurService service) {
 		return args -> {
-			Flux<Integer> foof  = Flux.generate(
-			            () -> Tuples.of(0, 1),
+			Flux<Long> foof  = Flux.generate(
+			            () -> Tuples.of(0l, 1l),
 			            (state, sink) -> {
 			                sink.next(state.getT1());
 			                return Tuples.of(state.getT2(), state.getT1() + state.getT2());
 			            }
 			    );
 			
-			foof.delayElements(Duration.ofSeconds(1)).map(String::valueOf)
+			foof.delayElements(Duration.ofSeconds(5)).map(String::valueOf)
 				.subscribe(foo -> service.save(foo).map(String::valueOf).subscribe(log::info));
 		};
 	}
@@ -52,8 +52,8 @@ public class RtxtApplication {
 		initializer.setDatabasePopulator(new ResourceDatabasePopulator(new ByteArrayResource((
 				"DROP TABLE IF EXISTS foo;"
 			  + "CREATE TABLE foo (id serial, ffield character varying(255) NOT NULL);"
-			  +	"DROP TABLE IF EXISTS bar;"
-			  + "CREATE TABLE bar (id serial, bfield character varying(255) NOT NULL);")
+			  +	"DROP TABLE IF EXISTS outbox;"
+			  + "CREATE TABLE outbox (id serial, anything character varying(255) NOT NULL);")
 			.getBytes())));
 
 		return initializer;
@@ -65,15 +65,14 @@ public class RtxtApplication {
 class OurService {
 	
 	private final FooRepository fooRepo;  
-	private final BarRepository barRepo;  
+	private final OutboxRepository outboxRepo;  
 
 	@Transactional
-	public Mono<Bar> save(String foo) {
+	public Mono<Outbox> save(String foo) {
 		return Mono.just(foo)
 				.map(Foo::from).flatMap(fooRepo::save)
-				.map(Bar::from).flatMap(barRepo::save);
+				.map(Outbox::from).flatMap(outboxRepo::save);
 	}
-
 }
 
 

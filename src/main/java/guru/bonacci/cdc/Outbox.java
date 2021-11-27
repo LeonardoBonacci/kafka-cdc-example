@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Bar {
+public class Outbox {
 
 	@Id
 	private Long id;
-	private String bfield;
+	private String anything;
 	
-	public static Bar from(Foo foo) {
-		return new Bar(null, "fibo:" + foo.getFfield());
+	public static Outbox from(Foo foo) {
+		return new Outbox(null, "fibo:" + foo.getFfield());
 	}
 }
